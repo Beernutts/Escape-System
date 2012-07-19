@@ -244,8 +244,6 @@ public:
 
     void Update(Esc::TComponentPtr component, uint32_t tickDelta);
     void Initialize();
-private:
-    Esc::TWorld *World;
 };
 
 /******************************************************************/
@@ -258,8 +256,21 @@ public:
     void Update(Esc::TComponentPtr component, uint32_t tickDelta);
     void Initialize();
 private:
-    Esc::TWorld *World;
     cpSpace *mpSpace;
+};
+
+/******************************************************************/
+class TTestSystem : public Esc::TSystem
+{
+public:
+    TTestSystem();
+
+    void Update(Esc::TEntityPtrs entities, uint32_t tickDelta);
+    void Initialize();
+    void PreStep();
+    void PostStep();
+    private:
+    int Count;
 };
 
 /******************************************************************

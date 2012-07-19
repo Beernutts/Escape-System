@@ -54,6 +54,7 @@ Game::Game(sf::RenderWindow *app) :
     pWorld->AddSystem(RenderingSystem);
     pWorld->AddSystem(DamageSystem);
     pWorld->AddSystem(DeathSystem);
+    pWorld->AddSystem(new TTestSystem());
 
     Esc::TEntityPtr Entity1;
     Esc::TEntityPtr Entity2;
@@ -137,7 +138,16 @@ Game::Game(sf::RenderWindow *app) :
 
 Game::~Game()
 {
+    printf("Kill Game\n");
+    pWorld->RemoveSystem(InputSystem);
+    pWorld->RemoveSystem(EnemySystem);
+    pWorld->RemoveSystem(PhysicsSystem);
+    pWorld->RemoveSystem(RenderingSystem);
+    pWorld->RemoveSystem(DamageSystem);
 
+    printf("Reset World\n");
+    pWorld->Reset();
+    printf("Done\n");
 }
 
 void Game::Run()
@@ -654,6 +664,34 @@ void TDeathSystem::Update(Esc::TComponentPtr component, uint32_t tickDelta)
 void TDeathSystem::Initialize()
 {
     Esc::TSystem::HandleComponent("Health", true);
+}
+
+/******************************************************************************/
+TTestSystem::TTestSystem() :
+  Esc::TSystem(true)
+{
+    Count = 0;
+}
+
+void TTestSystem::PreStep()
+{
+    if (Count % 50 == 0) printf("TTestSystem::PreStep()\n");
+}
+
+void TTestSystem::Update(Esc::TEntityPtrs entities, uint32_t tickDelta)
+{
+    if (Count % 50 == 0) printf("TTestSystem::Update() %d entities\n", entities.size());
+}
+
+void TTestSystem::PostStep()
+{
+    if (Count % 50 == 0) printf("TTestSystem::PostStep()\n");
+    Count++;
+}
+
+void TTestSystem::Initialize()
+{
+    Esc::TSystem::HandleComponent("PhysicalObject", true);
 }
 
 /******************************************************************************
