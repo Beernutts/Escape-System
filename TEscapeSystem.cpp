@@ -63,17 +63,20 @@ void TSystem::Remove(TEntityPtr Entity)
     }
 }
 
-void TSystem::Update(uint32_t tickDelta)
+void TSystem::UpdateInternal(uint32_t tickDelta)
 {
     if (AlwaysUpdate) {
-        Update(true, tickDelta);
+        Update(Entities, tickDelta);
     }
-    for (uint32_t i = 0; i < Components.size(); i++) {
-        Update(Components[i], tickDelta);
+    else if (!Components.empty()) {
+        for (uint32_t i = 0; i < Components.size(); i++) {
+            Update(Components[i], tickDelta);
+        }
     }
-
-    for (uint32_t i = 0; i < Entities.size(); i++) {
-        Update(Entities[i], tickDelta);
+    else {
+        for (uint32_t i = 0; i < Entities.size(); i++) {
+            Update(Entities[i], tickDelta);
+        }
     }
 }
 

@@ -28,8 +28,9 @@ public:
     virtual void Update(TEntityPtr entity, uint32_t tickDelta) {}
 
     // Called once for systems that always want update run 1 per tick
-    virtual void Update(bool AlwaysUpdate, uint32_t tickDelta) {}
+    virtual void Update(TEntityPtrs entities, uint32_t tickDelta) {}
     virtual void PreStep() {};
+    virtual void PostStep() {};
 
     void HandleComponent(std::string componentType, bool isAdd = true);
 
@@ -39,7 +40,9 @@ protected:
     TWorld *World;
 
 private:
-    void Update(uint32_t tickDelta);
+    void UpdateInternal(uint32_t tickDelta);
+
+    bool AllEntities() { return AlwaysUpdate; }
 
     // Internal Functions
     const boost::dynamic_bitset<> &GetComponentBits() { return ComponentBits; }
@@ -54,6 +57,11 @@ private:
     TComponentPtrs Components;
     TEntityPtrs Entities;
     bool AlwaysUpdate;
+
+};
+
+class TComponentSystem: public TSystem
+{
 
 };
 
