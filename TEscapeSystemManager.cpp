@@ -48,6 +48,7 @@ void TSystemManager::Add(TSystemPtr system, uint32_t afterTime, bool isRepeat,
 {
     system->Initialize();
 
+    // If this is a timed system, set it up
     if (afterTime) {
         TTimedSystem sysInfo;
         sysInfo.AtTime = afterTime + World->GetMilliSecElapsed();
@@ -55,18 +56,17 @@ void TSystemManager::Add(TSystemPtr system, uint32_t afterTime, bool isRepeat,
         sysInfo.IsRepeat = isRepeat;
         sysInfo.System = system;
 
-        // insert in order
+        // insert in order to limit finding the shortest time
         TTimedSystems::iterator it = TimedSystems.begin();
         for (; it != TimedSystems.end(); it++) {
             if (it->AtTime > sysInfo.AtTime) {
                 TimedSystems.insert(it, sysInfo);
-                return;
+                break;;
             }
         }
-
-        TimedSystems.insert(it, sysInfo);
-
-
+        if (it == TimedSystems.end()) {
+            TimedSystems.insert(it, sysInfo);
+        }
     }
     else {
         Systems.push_back(system);
@@ -77,7 +77,9 @@ void TSystemManager::Add(TSystemPtr system, uint32_t afterTime, bool isRepeat,
     for (uint32_t i = 0; i < entities.size(); i++) {
         const boost::dynamic_bitset<> &EntityBits = entities[i]->GetComponentBits();
         if (SystemBits.is_subset_of(EntityBits)) {
-            if (SystemBits.count() == 1) {
+            // If there's only 1 component for this system, just save off the
+            // Component it will call Update with
+            if (SystemBits.count() == 1 && !system->AllEntities()) {
                 system->Add(entities[i]->GetComponent(SystemBits.find_first()));
             }
             else {
@@ -187,7 +189,7 @@ void TSystemManager::ComponentAddition(TEntityPtr entity, TComponentPtr componen
         }
         const boost::dynamic_bitset<> &SystemBits = system->GetComponentBits();
         // Check if this system only wants one component
-        if (ComponentBit == SystemBits) {
+        if (ComponentBit == SystemBits && !system->AllEntities()) {
             //printf("Adding Component%s:%d singly\n", component->GetType().c_str(), (uint32_t)component->GetTypeBit());
             system->Add(component);
         }
@@ -226,7 +228,7 @@ void TSystemManager::ComponentRemoval(TEntityPtr entity, TComponentPtr component
         //       EntityBits.to_ulong(), ComponentBit.to_ulong());
 
         // Check if this system only wants one component
-        if (ComponentBit == SystemBits) {
+        if (ComponentBit == SystemBits && !system->AllEntities()) {
             //printf("Removing Component singly\n\n");
             system->Remove(component);
         }
@@ -259,7 +261,7 @@ void TSystemManager::Add(TEntityPtr Entity)
         }
         const boost::dynamic_bitset<> &SystemBits = system->GetComponentBits();
         if (SystemBits.is_subset_of(EntityBits)) {
-            if (SystemBits.count() == 1) {
+            if (SystemBits.count() == 1 && !system->AllEntities()) {
                 system->Add(Entity->GetComponent(SystemBits.find_first()));
             }
             else {
@@ -288,7 +290,7 @@ void TSystemManager::Remove(TEntityPtr Entity)
         }
         const boost::dynamic_bitset<> &SystemBits = system->GetComponentBits();
         if (SystemBits.is_subset_of(EntityBits)) {
-            if (SystemBits.count() == 1) {
+            if (SystemBits.count() == 1 && !system->AllEntities()) {
                 system->Remove(Entity->GetComponent(SystemBits.find_first()));
             }
             else {
@@ -300,6 +302,9 @@ void TSystemManager::Remove(TEntityPtr Entity)
 
 void TSystemManager::Update(uint32_t tickDelta)
 {
+    // Keeps track of the timed systems we updated, to call PostStep after
+    TSystemPtrs timedUpdates;
+
     // perform pre-step for all systems about to run
     for (uint32_t i = 0; i < Systems.size(); i++) {
         Systems[i]->PreStep();
@@ -314,14 +319,15 @@ void TSystemManager::Update(uint32_t tickDelta)
 
     // perform the actual updates
     for (uint32_t i = 0; i < Systems.size(); i++) {
-        Systems[i]->Update(tickDelta);
+        Systems[i]->UpdateInternal(tickDelta);
     }
 
     while(TimedSystems.size() &&
           TimedSystems.front().AtTime <= World->GetMilliSecElapsed()) {
         TTimedSystem sysInfo = TimedSystems.front();
         TimedSystems.pop_front();
-        sysInfo.System->Update(tickDelta);
+        sysInfo.System->UpdateInternal(tickDelta);
+        timedUpdates.push_back(sysInfo.System);
         if (sysInfo.IsRepeat) {
             sysInfo.AtTime = sysInfo.AfterTime + World->GetMilliSecElapsed();
             // Place it back into the list
@@ -341,7 +347,30 @@ void TSystemManager::Update(uint32_t tickDelta)
         }
     }
 
+    // Call PostStep on all the Systems
+    for (uint32_t i = 0; i < Systems.size(); i++) {
+        Systems[i]->PostStep();
+    }
+
+    for (uint32_t i = 0; i < timedUpdates.size(); i++) {
+        timedUpdates[i]->PostStep();
+    }
+
 }
 
+void TSystemManager::Reset()
+{
+    for (uint32_t i = 0; i < Systems.size(); i++) {
+        delete Systems[i];
+    }
+    Systems.clear();
+
+    for (TTimedSystems::iterator it = TimedSystems.begin();
+         it != TimedSystems.end(); it++) {
+        delete it->System;
+    }
+    TimedSystems.clear();
+
+}
 
 } // namespace

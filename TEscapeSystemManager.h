@@ -39,6 +39,8 @@ public:
 
     void Update(uint32_t tickDelta);
 
+    void Reset();
+
 protected:
     struct TTimedSystem
     {

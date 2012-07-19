@@ -24,6 +24,8 @@ public:
     void GetEntities(TEntityPtrs& entities);
     TEntityPtr GetEntity(uint64_t entityId);
 
+    void Reset();
+
 private:
     TEntityPtrs Entities;
 

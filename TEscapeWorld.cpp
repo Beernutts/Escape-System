@@ -11,6 +11,7 @@
 #include "TEscapeGroupManager.h"
 #include "TEscapeEntity.h"
 #include "TEscapeComponent.h"
+#include "TEscapeSystem.h"
 #include <stdio.h>
 
 static uint64_t u64UniqueEntityId = 1;
@@ -60,6 +61,12 @@ uint64_t TWorld::GetTypeBit(std::string componentType)
     return SystemManager->GetTypeBit(componentType);
 }
 
+void TWorld::Reset()
+{
+    EntityManager->Reset();
+    SystemManager->Reset();
+}
+
 /********************************************************************
 // System functions
 ********************************************************************/
@@ -75,9 +82,12 @@ void TWorld::AddSystem(TSystemPtr system,
     WorldUpdateOrder.push_back(SYSTEM_ADDITION);
 }
 
-void TWorld::RemoveSystem(TSystemPtr system)
+void TWorld::RemoveSystem(TSystemPtr system, bool freeSystem)
 {
-    SystemRemovals.push_back(system);
+    TSystemRemoval sysRemoval;
+    sysRemoval.FreeSystem = freeSystem;
+    sysRemoval.System = system;
+    SystemRemovals.push_back(sysRemoval);
     WorldUpdateOrder.push_back(SYSTEM_REMOVAL);
 }
 
@@ -274,7 +284,10 @@ void TWorld::Update()
 
         case SYSTEM_REMOVAL:
             if (!SystemRemovals.empty()) {
-                SystemManager->Remove(SystemRemovals[0]);
+                SystemManager->Remove(SystemRemovals[0].System);
+                if (SystemRemovals[0].FreeSystem) {
+                    delete SystemRemovals[0].System;
+                }
                 SystemRemovals.erase(SystemRemovals.begin());
             }
             break;

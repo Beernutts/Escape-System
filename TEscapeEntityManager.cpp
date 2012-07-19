@@ -9,6 +9,7 @@
 #include "TEscapeEntityManager.h"
 #include "TEscapePrivate.h"
 #include "TEscapeEntity.h"
+#include "TEscapeComponent.h"
 
 namespace Esc {
 
@@ -54,6 +55,18 @@ TEntityPtr TEntityManager::GetEntity(uint64_t entityId)
 void TEntityManager::GetEntities(TEntityPtrs& entities)
 {
     entities = Entities;
+}
+
+void TEntityManager::Reset()
+{
+    for (uint32_t i = 0; i < Entities.size(); i++) {
+        TComponentPtrs components = Entities[i]->GetComponents();
+        for (uint32_t j = 0; j < components.size(); j++) {
+            Entities[i]->RemoveComponent(components[j]);
+            delete components[j];
+        }
+        delete Entities[i];
+    }
 }
 
 } // namespace
