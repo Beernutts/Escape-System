@@ -42,7 +42,7 @@ public:
 
     void AddSystem(TSystemPtr system,
                    uint32_t afterTime = 0, bool isRepeat = false);
-    void RemoveSystem(TSystemPtr system);
+    void RemoveSystem(TSystemPtr system, bool freeSystem = true);
     void UpdateSystem(TSystemPtr system,
                       uint32_t afterTime, bool isRepeat);
 
@@ -50,6 +50,8 @@ public:
     bool GetGroupEntities(std::string groupName, TEntityPtrs &entities);
 
     void Update();
+
+    void Reset();
 
     uint32_t GetMilliSecElapsed();
 
@@ -68,28 +70,27 @@ private:
     boost::posix_time::ptime StartTime;
     boost::posix_time::ptime CurrentTime;
 
-    struct TSystemInfo
-    {
+    struct TSystemInfo {
         TSystemPtr system;
         uint32_t afterTime;
         bool isRepeat;
     };
-
-    struct TComponentRemoval
-    {
+    struct TComponentRemoval {
         bool FreeComp;
         TComponentPtr Component;
     };
-
-    struct TComponentAddition
-    {
+    struct TComponentAddition {
         TEntityPtr Entity;
         TComponentPtr Component;
+    };
+    struct TSystemRemoval {
+        bool FreeSystem;
+        TSystemPtr System;
     };
 
     std::vector<TSystemInfo> SystemAdditions;
     std::vector<TSystemInfo> SystemUpdates;
-    std::vector<TSystemPtr> SystemRemovals;
+    std::vector<TSystemRemoval> SystemRemovals;
 
     std::vector<TComponentAddition> ComponentAdditions;
     std::vector<TComponentRemoval> ComponentRemovals;

@@ -34,6 +34,7 @@ public:
     std::string GetGroup() { return GroupName; }
 
     friend class TWorld;
+    friend class TEntityManager;
     friend class TSystemManager;
     friend class TGroupManager;
 
