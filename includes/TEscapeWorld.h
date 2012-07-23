@@ -87,10 +87,17 @@ private:
         bool FreeSystem;
         TSystemPtr System;
     };
+    struct TGroupSet {
+        std::string GroupName;
+        TEntityPtr Entity;
+        bool IsAdd;
+    };
 
     std::vector<TSystemInfo> SystemAdditions;
     std::vector<TSystemInfo> SystemUpdates;
     std::vector<TSystemRemoval> SystemRemovals;
+
+    std::vector<TGroupSet> GroupSets;
 
     std::vector<TComponentAddition> ComponentAdditions;
     std::vector<TComponentRemoval> ComponentRemovals;
@@ -106,7 +113,8 @@ private:
         ENTITY_DELETION,
         SYSTEM_ADDITION,
         SYSTEM_UPDATE,
-        SYSTEM_REMOVAL
+        SYSTEM_REMOVAL,
+        GROUP_SET
     };
 
     std::vector<TWorldUpdate> WorldUpdateOrder;

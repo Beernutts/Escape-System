@@ -184,9 +184,24 @@ TEntityPtr TWorld::GetEntity(uint64_t entityId)
 /********************************************************************
 // Group
 ********************************************************************/
-bool TWorld::SetGroup(TEntityPtr entity, std::string groupName, bool isAdd)
+bool TWorld::SetGroup(TEntityPtr entity, std::string groupName,
+                      bool isAdd)
 {
-    return GroupManager->Set(entity, groupName, isAdd);
+    TGroupSet groupInfo;
+    groupInfo.Entity = entity;
+    groupInfo.GroupName = groupName;
+    groupInfo.IsAdd = isAdd;
+
+    if (!isAdd) {
+        TEntityPtrs temp;
+        if (!GroupManager->Get(groupName, temp)) {
+            return false;
+        }
+    }
+    GroupSets.push_back(groupInfo);
+    WorldUpdateOrder.push_back(GROUP_SET);
+
+    return true;
 }
 
 bool TWorld::GetGroupEntities(std::string groupName, TEntityPtrs &entities)
@@ -292,6 +307,13 @@ void TWorld::Update()
             }
             break;
 
+        case GROUP_SET:
+            if (!GroupSets.empty()) {
+                GroupManager->Set(GroupSets[0].Entity, GroupSets[0].GroupName,
+                                  GroupSets[0].IsAdd);
+                GroupSets.erase(GroupSets.begin());
+            }
+            break;
         }
     }
     WorldUpdateOrder.clear();
