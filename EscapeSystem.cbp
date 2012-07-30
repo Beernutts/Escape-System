@@ -23,13 +23,12 @@
 			<Target title="Release">
 				<Option output="lib\libEscapeSystem" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
-				<Option object_output="obj\Debug\" />
+				<Option object_output="objRelease\" />
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-g" />
 					<Add directory="..\..\boost_1_50_0" />
 					<Add directory="includes" />
 				</Compiler>

@@ -108,36 +108,20 @@ void TWorld::UpdateSystem(TSystemPtr system,
 ********************************************************************/
 void TWorld::AddComponent(TEntityPtr entity, TComponentPtr component)
 {
-    // if this entity is in the system already, then we need
-    // to make sure the systems update it
-    if (entity->IsActive) {
-        TComponentAddition compAdd;
-        compAdd.Entity = entity;
-        compAdd.Component = component;
-        ComponentAdditions.push_back(compAdd);
-        WorldUpdateOrder.push_back(COMPONENT_ADDITION);
-    }
-    else {
-        entity->AddComponent(component);
-    }
+    TComponentAddition compAdd;
+    compAdd.Entity = entity;
+    compAdd.Component = component;
+    ComponentAdditions.push_back(compAdd);
+    WorldUpdateOrder.push_back(COMPONENT_ADDITION);
 }
 
 void TWorld::RemoveComponent(TEntityPtr entity, TComponentPtr component, bool freeComp)
 {
-    if (entity->IsActive) {
-        TComponentRemoval compRemove;
-        compRemove.FreeComp = freeComp;
-        compRemove.Component = component;
-        ComponentRemovals.push_back(compRemove);
-        WorldUpdateOrder.push_back(COMPONENT_REMOVAL);
-    }
-    else {
-        entity->RemoveComponent(component);
-        if (freeComp) {
-            delete component;
-        }
-    }
-
+    TComponentRemoval compRemove;
+    compRemove.FreeComp = freeComp;
+    compRemove.Component = component;
+    ComponentRemovals.push_back(compRemove);
+    WorldUpdateOrder.push_back(COMPONENT_REMOVAL);
 }
 
 /********************************************************************
@@ -219,13 +203,17 @@ void TWorld::Update()
     boost::posix_time::time_duration tickDelta = lastTime - CurrentTime;
 
     // Update in the order the commands were given
-    for (uint32_t i = 0; i < WorldUpdateOrder.size(); i++) {
+    uint32_t i;
+    for (i = 0; i < WorldUpdateOrder.size(); i++) {
+        printf("World::Update Action %d  ", WorldUpdateOrder[i]);
         switch(WorldUpdateOrder[i]) {
         case COMPONENT_ADDITION:
             if (!ComponentAdditions.empty()) {
                 TEntityPtr entity = ComponentAdditions[0].Entity;
                 entity->AddComponent(ComponentAdditions[0].Component);
-                SystemManager->ComponentAddition(entity, ComponentAdditions[0].Component);
+                if (entity->IsActive) {
+                    SystemManager->ComponentAddition(entity, ComponentAdditions[0].Component);
+                }
                 ComponentAdditions.erase(ComponentAdditions.begin());
             }
             break;
@@ -233,7 +221,9 @@ void TWorld::Update()
         case COMPONENT_REMOVAL:
             if (!ComponentRemovals.empty()) {
                 TEntityPtr entity = ComponentRemovals[0].Component->GetOwnerEntity();
-                SystemManager->ComponentRemoval(entity, ComponentRemovals[0].Component);
+                if (entity->IsActive) {
+                    SystemManager->ComponentRemoval(entity, ComponentRemovals[0].Component);
+                }
                 entity->RemoveComponent(ComponentRemovals[0].Component);
                 if (ComponentRemovals[0].FreeComp) {
                     delete ComponentRemovals[0].Component;
@@ -254,7 +244,8 @@ void TWorld::Update()
         case ENTITY_REMOVAL:
             if (!EntityRemovals.empty()) {
                 if (!EntityRemovals[0]->GroupName.empty()) {
-                    GroupManager->Set(EntityRemovals[0], EntityRemovals[0]->GroupName, false);
+                    GroupManager->Set(EntityRemovals[0],
+                                      EntityRemovals[0]->GroupName, false);
                 }
                 EntityRemovals[0]->IsActive = false;
                 SystemManager->Remove(EntityRemovals[0]);
@@ -265,6 +256,10 @@ void TWorld::Update()
 
         case ENTITY_DELETION:
             if (!EntityDeletetions.empty()) {
+                if (!EntityDeletetions[0]->GroupName.empty()) {
+                    GroupManager->Set(EntityDeletetions[0],
+                                      EntityDeletetions[0]->GroupName, false);
+                }
                 if (EntityDeletetions[0]->IsActive) {
                     SystemManager->Remove(EntityDeletetions[0]);
                     EntityManager->Remove(EntityDeletetions[0]);
@@ -316,6 +311,8 @@ void TWorld::Update()
             break;
         }
     }
+    if (i != 0) printf("  Update Done!\n");
+
     WorldUpdateOrder.clear();
 
     // this will loop through all the systems

@@ -52,6 +52,9 @@ private:
 
     TComponentPtrs Components;
     boost::dynamic_bitset<> ComponentBits;
+
+    // For Debugging
+    void PrintComponents();
 };
 
 } // namespace

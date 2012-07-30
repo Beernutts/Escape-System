@@ -37,15 +37,21 @@ TEntity::~TEntity()
 
 void TEntity::AddComponent(TComponentPtr Component)
 {
+    printf("  Ent %u TEntity::AddComponent %s\n",
+           (uint32_t)(GetId() & 0xFFFFFFFF), Component->GetType().c_str());
     Component->SetEntity(EntityId);
     Components.push_back(Component);
 
     ComponentBits.set(Component->GetTypeBit());
 
+    //PrintComponents();
+
 }
 
 void TEntity::RemoveComponent(TComponentPtr Component)
 {
+    //printf("  Ent %u TEntity::RemoveComponent %s\n",
+    //       (uint32_t)(GetId() & 0xFFFFFFFF), Component->GetType().c_str());
     TComponentPtrs::iterator it = Components.begin();
 
     for (; it != Components.end(); it++) {
@@ -59,6 +65,12 @@ void TEntity::RemoveComponent(TComponentPtr Component)
         Component->SetEntity(0);
         Components.erase(it);
     }
+    else {
+        printf("** ERROR **: TEntity::RemoveComponent() could not find COmponent %s!\n",
+               Component->GetType().c_str());
+    }
+
+    //PrintComponents();
 }
 
 TComponentPtr TEntity::GetComponent(std::string componentName)
@@ -83,6 +95,14 @@ TComponentPtr TEntity::GetComponent(uint64_t typeBit)
     printf("Did not find Component typebit %u!\n", (unsigned int)typeBit);
 
     return NULL;
+}
+
+void TEntity::PrintComponents()
+{
+    printf("   %d Components..\n", Components.size());
+    for (uint32_t i = 0; i < Components.size(); i++) {
+        printf("    %s Component\n", Components[i]->GetType().c_str());
+    }
 }
 
 } // namespace

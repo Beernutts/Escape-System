@@ -290,6 +290,7 @@ void TSystemManager::Remove(TEntityPtr Entity)
         }
         const boost::dynamic_bitset<> &SystemBits = system->GetComponentBits();
         if (SystemBits.is_subset_of(EntityBits)) {
+            //printf("TSystemManager::Remove Entity %u\n", (uint32_t)Entity->GetId());
             if (SystemBits.count() == 1 && !system->AllEntities()) {
                 system->Remove(Entity->GetComponent(SystemBits.find_first()));
             }
