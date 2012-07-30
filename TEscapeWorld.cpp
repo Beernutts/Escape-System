@@ -205,7 +205,7 @@ void TWorld::Update()
     // Update in the order the commands were given
     uint32_t i;
     for (i = 0; i < WorldUpdateOrder.size(); i++) {
-        printf("World::Update Action %d  ", WorldUpdateOrder[i]);
+        //printf("World::Update Action %d  ", WorldUpdateOrder[i]);
         switch(WorldUpdateOrder[i]) {
         case COMPONENT_ADDITION:
             if (!ComponentAdditions.empty()) {
@@ -311,7 +311,7 @@ void TWorld::Update()
             break;
         }
     }
-    if (i != 0) printf("  Update Done!\n");
+    //if (i != 0) printf("  Update Done!\n");
 
     WorldUpdateOrder.clear();
 

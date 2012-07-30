@@ -37,8 +37,8 @@ TEntity::~TEntity()
 
 void TEntity::AddComponent(TComponentPtr Component)
 {
-    printf("  Ent %u TEntity::AddComponent %s\n",
-           (uint32_t)(GetId() & 0xFFFFFFFF), Component->GetType().c_str());
+    //printf("  Ent %u TEntity::AddComponent %s\n",
+    //       (uint32_t)(GetId() & 0xFFFFFFFF), Component->GetType().c_str());
     Component->SetEntity(EntityId);
     Components.push_back(Component);
 
